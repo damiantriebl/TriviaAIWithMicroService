@@ -47,7 +47,7 @@ const Character = (character: CharacterInterface) => {
       role: 'user'
     })
     console.log('se envia el body', body)
-    const caller = await fetch('http://localhost:5000/api/chatgpt', {
+    const caller = await fetch('https://ew2txc74q7.execute-api.us-east-1.amazonaws.com/openai/chatgpt', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
