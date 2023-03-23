@@ -46,21 +46,18 @@ const Character = (character: CharacterInterface) => {
       presence_penalty: 0.6,
       role: 'user'
     })
+
     console.log('se envia el body', body)
-    const caller = await fetch('https://ew2txc74q7.execute-api.us-east-1.amazonaws.com/openai/chatgpt', {
+    const caller = await fetch('https://towvmwvg96.execute-api.us-east-2.amazonaws.com/openai/chatgpt', {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
       body
     })
 
-    console.log('y si algo pasa o no pasa?', caller)
 
     try {
       if (caller) {
         const data = await caller.json()
+        console.log('se obtiene el json', data)
         obtainJson(data);
       }
     } catch (e) {

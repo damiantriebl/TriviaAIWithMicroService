@@ -72,19 +72,17 @@ const CharacterView = (data) => {
             frequency_penalty: 0,
             presence_penalty: 0.6,
             role: 'system'
-
         })
+
+
         console.log(body)
-        const caller = await fetch('https://ew2txc74q7.execute-api.us-east-1.amazonaws.com/openai/chatgpt', {
+        const caller = await fetch('https://towvmwvg96.execute-api.us-east-2.amazonaws.com/openai/chatgpt', {
             method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
             body
         })
-        const data = await caller.json() as message
-        console.log(data)
+        console.log(caller)
+        const data = await caller.json()
+        console.log(caller)
         setContext((prevContext) => [...prevContext, data]);
     }
     // check the position of the mouse, and modify state with this positition
