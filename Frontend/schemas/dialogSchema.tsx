@@ -8,3 +8,7 @@ export interface dialog {
   difficulty: number; // difficulty of the question to ask
   answered: boolean;
 }
+export interface message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}

@@ -14,29 +14,14 @@ interface Settings {
 function SettingsMenu<Settings>({
     title,
     principalData,
-    data,
+    options,
     configuration,
     allHidden,
     handleOption,
 }) {
+
     const [openConfiguration, setOpenConfiguration] = useState(false);
-    const [openConfigurationOver, setOpenConfigurationOver] = useState({
-        topic: false,
-        language: false,
-        difficulty: false,
-        javascript: false,
-        python: false,
-        java: false,
-        c: false,
-        one: false,
-        two: false,
-        three: false,
-        four: false,
-        five: false,
-        english: false,
-        spanish: false,
-        German: false,
-    });
+    const [openConfigurationOver, setOpenConfigurationOver] = useState<string>('');
     const handleSettings = (e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();
         setOpenConfiguration((prev) => !prev);
@@ -44,28 +29,21 @@ function SettingsMenu<Settings>({
     const handleHover = (
         e: React.MouseEvent<HTMLDivElement>,
         menuType: string,
-        on: boolean,
     ) => {
         e.stopPropagation();
-        const newState = openConfigurationOver
-        for (const key of Object.keys(openConfigurationOver)) {
-            newState[key] = false;
-        }
-        newState[menuType] = on;
-        setOpenConfigurationOver(newState);
-        console.log('estados', newState, openConfigurationOver)
+        setOpenConfigurationOver(menuType);
     };
 
     return (
         <section>
             <div
-                onMouseOver={(e) => handleHover(e, principalData, true)}
-                onMouseLeave={(e) => handleHover(e, principalData, false)}
+                onMouseOver={(e) => handleHover(e, principalData)}
+                onMouseLeave={(e) => handleHover(e, principalData)}
                 className="my-4 flex flex-row"
                 onClick={(e) => handleSettings(e)}
             >
                 <Arrow
-                    className={`${openConfigurationOver[principalData] ? 'visible' : 'invisible'
+                    className={`${openConfiguration && allHidden ? 'visible' : 'invisible'
                         }`}
                 />
                 <h1>{title}</h1>
@@ -73,18 +51,18 @@ function SettingsMenu<Settings>({
                     className={`${openConfiguration && allHidden ? 'visible' : 'invisible'
                         }`}
                 >
-                    {data.map((obj) => {
+                    {options.map((obj) => {
                         // * This element is a div and not a button because the button causes hydration problems
                         return (
                             <div
-                                onMouseOver={(e) => handleHover(e, obj, true)}
+                                onMouseOver={(e) => handleHover(e, obj)}
                                 className={`${configuration === obj ? 'text-slate-900' : 'text-slate-600'
                                     } flex flex-row pb-4`}
                                 onClick={() => handleOption(obj, principalData)}
                                 key={obj}
                             >
                                 <Arrow
-                                    className={`${openConfigurationOver[obj] ? 'visible' : 'invisible'
+                                    className={`${openConfigurationOver === obj ? 'visible' : 'invisible'
                                         }`}
                                 />
                                 <h2>{obj}</h2>

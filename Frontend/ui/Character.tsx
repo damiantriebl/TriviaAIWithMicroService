@@ -3,12 +3,9 @@ import { useState } from 'react';
 
 import Image from 'next/image';
 import { npc } from '@/schemas/constants';
-import { dialog } from '@/schemas/dialogSchema';
+import { dialog, message } from '@/schemas/dialogSchema';
 
-interface message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
+
 interface CharacterInterface {
   dialogSet: (name: npc, response: boolean) => void;
   name: npc;
@@ -47,17 +44,17 @@ const Character = (character: CharacterInterface) => {
       role: 'user'
     })
 
-    console.log('se envia el body', body)
     const caller = await fetch('https://towvmwvg96.execute-api.us-east-2.amazonaws.com/openai/chatgpt', {
       method: 'POST',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
       body
     })
-
 
     try {
       if (caller) {
         const data = await caller.json()
-        console.log('se obtiene el json', data)
         obtainJson(data);
       }
     } catch (e) {
@@ -114,8 +111,7 @@ const Character = (character: CharacterInterface) => {
             onClick={handleDialog}
             className="bg-slate-900 p-4 text-slate-200"
           >
-            {' '}
-            {'>'}{' '}
+            {'>'}
           </button>
         </div>
       </div>
