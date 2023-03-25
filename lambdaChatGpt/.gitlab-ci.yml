@@ -1,0 +1,42 @@
+---
+image: node:14.21.2
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  STAGE: develop
+
+install_dependencies:
+  stage: build
+  artifacts:
+    paths:
+      - node_modules
+  script:
+    - yarn
+
+run_tests:
+  stage: test
+  needs:
+    - job: install_dependencies
+      artifacts: true
+  script:
+    - yarn lintAndTest
+
+deploy_to_aws:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+  needs:
+    - install_dependencies
+    - run_tests
+  script:
+    - echo "deploying to aws"
+    - npm install -g serverless
+    - sls deploy --stage $STAGE

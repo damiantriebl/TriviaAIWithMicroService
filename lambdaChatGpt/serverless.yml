@@ -1,0 +1,58 @@
+service: openai-chatgpt
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-east-2
+  stage: ${opt:stage, self:custom.defaultStage}
+  memorySize: 256
+  apiName: openai-chatgpt2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource:
+        - ${self:custom.secretsArn.${self:provider.stage}}
+  environment:
+    STAGE: ${self:provider.stage}
+    NODE_ENV: ${self:provider.stage}
+    LOG_LEVEL: ${self:custom.logLevel.${self:provider.stage}}
+    OPENAI_API_KEY: ${self:custom.openaiAPIKey.${self:provider.stage}}
+    REGION: ${self:custom.region.${self:provider.stage}}
+    SECRETS_ARN: ${self:custom.secretsArn.${self:provider.stage}}
+    TIMEOUT: ${self:custom.timeout.${self:provider.stage}}
+  httpApi:
+    cors:
+      allowedOrigins:
+        - https://rd-latam.cognizantsoftvision.com
+        - http://localhost:5173
+        - https://main.d3eec7ekiz8cop.amplifyapp.com 
+      allowedMethods:
+        - POST
+custom:
+  defaultStage: develop
+  logLevel:
+    develop: info
+  openaiAPIKey:
+    develop: define
+  region:
+    develop: us-east-1
+  secretsArn:
+    develop: arn:aws:secretsmanager:us-east-1:415801906357:secret:openai-a0CoJ5
+  timeout:
+    develop: 25000
+  serverless-offline:
+    port: 5000
+    httpPort: 5000
+functions:
+  chatHandler:
+    handler: src/chatHandler.handler
+    timeout: 30
+    events:
+      - httpApi:
+          path: /openai/chatgpt
+          method: POST

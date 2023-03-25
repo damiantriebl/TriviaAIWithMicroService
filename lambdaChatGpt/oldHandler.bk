@@ -1,0 +1,80 @@
+/* eslint-disable linebreak-style */
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+import { Handler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { Configuration, OpenAIApi } from 'openai';
+import { logger } from './logger';
+import { config } from './config';
+
+const MODEL_HEADER_NAME = 'model';
+
+export const handler: Handler = async (
+  event: APIGatewayProxyEvent,
+): Promise<APIGatewayProxyResult> => {
+  logger.debug('Calling chat gpt lambda', event.body);
+  if (!event?.body) {
+    return {
+      // eslint-disable-next-line linebreak-style
+      statusCode: 400,
+      body: 'The request should have a body',
+    };
+  }
+  if (!config.COMPLETION_MODELS.includes(event?.headers[MODEL_HEADER_NAME])) {
+    return {
+      statusCode: 400,
+      body: `model header should be one of the following: ${config.COMPLETION_MODELS}`,
+    };
+  }
+  // Get secrets from AWS Secret Manager
+  const secretsManagerClient = new SecretsManagerClient({ region: config.REGION });
+  const { SecretString: awsConfigJson } = await secretsManagerClient.send(
+    new GetSecretValueCommand({
+      SecretId: config.SECRETS_ARN,
+    }),
+  );
+  const awsConfigSecrets = JSON.parse(awsConfigJson || '{}');
+
+  logger.debug('Starting OpenAI API');
+  const configuration = new Configuration({
+    apiKey: awsConfigSecrets.OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
+
+  try {
+    logger.debug(`Calling createCompletion - model: ${event.headers[MODEL_HEADER_NAME]}`);
+    let result;
+    let responseBody;
+    if (event.headers[MODEL_HEADER_NAME] === config.CHAT_MODEL) {
+      result = await openai.createChatCompletion({
+        model: event.headers[MODEL_HEADER_NAME],
+        messages: [{ role: 'user', content: event.body }],
+      }, { timeout: Number(config.TIMEOUT) });
+      responseBody = result?.data?.choices[0]?.message?.content || 'empty response';
+    } else {
+      result = await openai.createCompletion({
+        model: event.headers[MODEL_HEADER_NAME],
+        prompt: event.body,
+        temperature: 0.4,
+        max_tokens: 300,
+      }, { timeout: Number(config.TIMEOUT) });
+      responseBody = result?.data?.choices[0]?.text || 'empty response';
+    }
+    return {
+      statusCode: 200,
+      body: responseBody,
+    };
+  } catch (error) {
+    let errorMessage;
+    if (error.response) {
+      logger.error(error.response.status);
+      logger.error(error.response.data);
+      errorMessage = error.response.data;
+    } else {
+      logger.error(error.message);
+      errorMessage = error.message;
+    }
+    return {
+      statusCode: 500,
+      body: errorMessage,
+    };
+  }
+};
